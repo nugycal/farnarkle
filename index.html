@@ -1,0 +1,286 @@
+<html>
+    <head>
+        <title id="page-title"> Farnarkle </title>
+        <meta http-equiv="pragma" content="no-cache">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js" integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T" crossorigin="anonymous"></script>
+        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.1.0/css/all.css" integrity="sha384-lKuwvrZot6UHsBSfcMvOkWwlCMgc0TaWr+30HWe3a4ltaBwTZhyTEggF5tJv8tbt" crossorigin="anonymous">
+        <style>
+            html, body {
+                background-color: #2d3436;
+            }
+            #content {
+                display: none;
+            }
+            #current {
+                background-color: #2d3436;
+                z-index: 10;
+                position: relative;
+                padding: 0px 10px 10px 10px;
+            }
+            
+            #previous * {
+                z-index: 9;
+            }
+            #previous input {
+                min-width: 52px;
+                margin-right: 5px;
+            }
+            #current_tiles {
+                margin-top: 40vh;
+                text-align: center !important;
+                align-items: center !important;
+                min-width: 250px;
+            }
+            #current_tiles * {
+                margin-left: 10px !important;
+                margin-right: 10px !important;
+                margin-top: 10px !important;
+                min-width: 52px;
+                float: none !important;
+                margin: 5 auto !important;
+            }
+            b {
+                color: white;
+                margin-right: 35px !important;
+                margin-left: 25px !important;
+            }
+            #previous {
+                padding-top: 10px;
+                padding-bottom: 10px;
+                max-height: 100vh;
+                overflow: auto;
+            }
+            #guess {
+                margin-bottom: 10px;
+                margin-top: -10px;
+            }
+            @media (max-width: 720px) {
+                #current {
+                    bottom: 0px;
+                    position: absolute;
+                    max-height: 30vh;
+                    padding: 0;
+                    padding-bottom: -40vh;
+                    width: 100vw;
+                    overflow: scroll;
+                }
+                #current_tiles {
+                    margin-top: 0px !important;
+                    margin-bottom: 10px !important;
+                }
+                #previous {
+                    height: 80vh !important;
+                    overflow-y: scroll !important;
+                    overflow-x: scroll !important;
+                    margin-left: 25px;
+                }
+                b {
+                    color: white;
+                    margin-right: 15px !important;
+                    margin-left: 0px !important;
+                }
+            }
+            @media (min-width: 768px) {
+                #current {
+                    width: 40vw !important;
+                    margin: 0 auto;
+                    border-radius: 10px;
+                }
+            }
+        </style>
+        <script>
+            function play() {
+                $('#settingsModal').modal('hide');
+                $('#content').show();
+                $('#hello').modal('show');
+                
+                tile_no = $('#tile_no').val();
+                min_tile = $('#min_tile_range').val();
+                max_tile = $('#max_tile_range').val();
+                
+                sequence = [];
+                for (i = 0; i < tile_no; i++) {
+                    sequence[i] = Math.floor(Math.random() * (max_tile - min_tile)) + (min_tile-1);
+                    sequence[i] = Number(sequence[i]) % (Number(max_tile)) + 1;
+                }
+                
+                attempts = [];
+                
+                // Draw the columns on the screen
+                for (i = 0; i < tile_no; i++) {
+                    window_coefficient = window.innerWidth / 200;
+                    if (window_coefficient < 0) window_coefficient = -window_coefficient;
+                    if (Math.round(window_coefficient) % 2 != 0) window_coefficient += 1;
+                    // alert(window_coefficient);
+                    if (i % Math.round(window_coefficient) == 0) {
+                        $('#current_tiles').append('<div class="w-100"></div>');
+                    }
+                    $('#current_tiles').append('<input type="number" class="form-control col-2" id="tile_'+(i+1)+'" placeholder="'+min_tile+'" aria-label="'+min_tile+'" aria-describedby="tile_'+(i+1)+'" value="'+min_tile+'" min="'+min_tile+'" max="'+max_tile+'">');
+                }
+            }
+            
+            function make_guess() {
+                tile_no = $('#tile_no').val();
+                min_tile = $('#min_tile_range').val();
+                max_tile = $('#max_tile_range').val();
+                
+                guess = [];
+                farnarkles = [];
+                arkles = [];
+                same = 0;
+                arkle_list = sequence.slice();
+                // console.log(sequence);
+
+                for (i = 0; i < tile_no; i++) {
+                    guess[i] = $('#tile_'+(i+1)).val();
+                    guess[i] = Number(guess[i]);
+                    if (guess[i] != sequence[i]) {
+                        same = 1;
+                    }
+                    else {
+                        farnarkles[farnarkles.length] = i;
+                        arkle_list.splice(arkle_list.indexOf(guess[i]), 1);
+                    }
+                }
+                // console.log(guess);
+                // console.log(arkle_list);
+                for (i = 0; i < tile_no; i++) {
+                    if (arkle_list.indexOf(guess[i]) > -1 && !farnarkles.includes(i)) {
+                        index = arkle_list.indexOf(guess[i]);
+                        arkle_list.splice(index, 1);
+                        arkles[arkles.length] = i;
+                    }
+                }
+                
+                console.log("Made Guess("+guess+") with "+farnarkles.length+" farnarkles and "+arkles.length+" arkles.");
+                
+                if (same == 0) {
+                    console.log("Guessed sequence!");
+                    
+                    // High scores
+                    high_score = localStorage.getItem("high_score");
+                    message = "Well Done!";
+                    if (high_score) {
+                        if (high_score <= attempts.length) {
+                            message = "Your previous high score is "+String(high_score)+" attempts! Try again to beat it?";
+                        }
+                        else if (high_score > attempts.length) {
+                            message = "You beat your previous high score ["+String(high_score)+" attempts] by "+String(high_score - attempts.length)+"!";
+                            localStorage.setItem("high_score", attempts.length);
+                        }
+                    }
+                    else {
+                        localStorage.setItem("high_score", attempts.length);
+                        message = "You set a new high score of "+String(attempts.length)+" attempts!"
+                    }
+                    $('#game_over_content').html("It took you "+attempts.length+" attempts to guess the correct sequence: ["+String(sequence).replace(/,/g, ", ")+"]<br>"+message);
+                    $('#gameOverModal').modal('show');
+                }
+                
+                attempts[attempts.length] = guess;
+                i = attempts.length-1;
+                $('#previous').append('<form id="attempt_'+(i+1)+'" class="form-check-inline col-4"></form><br>');
+                $('#attempt_'+(i+1)).append('<b>'+('000'+String((i+1))).slice(-2)+'</b>');
+                for (j = 0; j < tile_no; j++) {
+                    if (j % 4 == 0) {
+                        $('#attempt_'+(i+1)).append('<div class="w-100"></div>');
+                    }
+                    if (farnarkles.includes(j)) {
+                        $('#attempt_'+(i+1)).append('<input type="number" class="form-control col-2 bg-success text-white" id="attempt_'+(i+1)+'_tile_'+(i+1)+'" placeholder="'+min_tile+'" aria-label="'+min_tile+'" aria-describedby="attempt_'+(i+1)+'_tile_'+(i+1)+'" value="'+attempts[i][j]+'" min="'+min_tile+'" max="'+max_tile+'" disabled>');
+                    }
+                    else if (arkles.includes(j)) {
+                        $('#attempt_'+(i+1)).append('<input type="number" class="form-control col-2 bg-warning text-black" id="attempt_'+(i+1)+'_tile_'+(i+1)+'" placeholder="'+min_tile+'" aria-label="'+min_tile+'" aria-describedby="attempt_'+(i+1)+'_tile_'+(i+1)+'" value="'+attempts[i][j]+'" min="'+min_tile+'" max="'+max_tile+'" disabled>');
+                    }
+                    else {
+                        $('#attempt_'+(i+1)).append('<input type="number" class="form-control col-2 bg-danger text-white" id="attempt_'+(i+1)+'_tile_'+(i+1)+'" placeholder="'+min_tile+'" aria-label="'+min_tile+'" aria-describedby="attempt_'+(i+1)+'_tile_'+(i+1)+'" value="'+attempts[i][j]+'" min="'+min_tile+'" max="'+max_tile+'" disabled>');
+                    }
+                }
+                
+                if (attempts.length < Math.ceil(window.innerHeight / 55)) {
+                    $('#current').css('margin-top', -54*attempts.length);
+                }
+                else {
+                    $('#current').css('margin-top', -54*Math.floor(window.innerHeight / 55));
+                }
+            }
+            function clearScores() {
+                localStorage.removeItem("high_score");
+            }
+        </script>
+    </head>
+    <body onload="$('#settingsModal').modal('show');">
+        <div class="modal fade" id="settingsModal" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="settingsModal" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="settingsModalLabel">Game Settings</h5>
+                    </div>
+                    <div class="modal-body">
+                        <label for="tile_no"> Amount of Tiles </label>
+                        <div class="input-group mb-3 col-12">
+                            <input type="number" class="form-control" id="tile_no" placeholder="Amount of Tiles" aria-label="Amount of Tiles" aria-describedby="reset_tile_no" value="4">
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-secondary" type="button" id="reset_tile_no" onclick="$('#tile_no').val('4');">Reset</button>
+                            </div>
+                        </div>
+                        
+                        <label for="min_tile_range"> Range of Tiles </label>
+                        <form class="form-check-inline">
+                            <div class="input-group mb-3 col-6">
+                                <input type="number" class="form-control" id="min_tile_range" placeholder="Minimum" aria-label="Minimum" aria-describedby="reset_min_tile_range" value="1">
+                                <div class="input-group-append">
+                                    <button class="btn btn-outline-secondary" type="button" id="reset_min_tile_range" onclick="$('#min_tile_range').val('1');">Reset</button>
+                                </div>
+                            </div>
+                            <p style="margin-top: -0.1em; font-size: 36px;"> - </p>
+                            <div class="input-group mb-3 col-6">
+                                <input type="number" class="form-control" id="max_tile_range" placeholder="Maximum" aria-label="Maximum" aria-describedby="reset_max_tile_range" value="8">
+                                <div class="input-group-append">
+                                    <button class="btn btn-outline-secondary" type="button" id="reset_max_tile_range" onclick="$('#max_tile_range').val('8');">Reset</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-success" onclick="play()">Play!</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="content">
+            <div id="previous">
+            </div>
+            
+            <div id="current">
+               <center>
+                  <div id="current_tiles" class="row col-4 center-block">
+                  </div>
+                  <br>
+                  <button id="guess" class="btn btn-warning" onclick="make_guess()">Make Guess</button>
+               </center>
+            </div>
+        </div>
+        <div id="game_over">
+            <div class="modal fade" id="gameOverModal" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="gameOverModal" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="gameOverModalLabel"> Game Over </h5>
+                        </div>
+                        <div class="modal-body">
+                            <p id="game_over_content"> content </p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-danger" onclick="clearScores()">Reset Highscores</button>
+                            <button type="button" class="btn btn-success" data-dismiss="modal" onclick="window.location.reload();">Play Again?</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
